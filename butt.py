@@ -12,7 +12,7 @@ with open("hypixelkey.txt") as file:
 with open("bottoken.txt") as file:
     token = file.read()
 status = "you"
-
+#gaming
 
 @client.command(pass_context=True)
 async def help(ctx):
