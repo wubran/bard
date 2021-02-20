@@ -1,0 +1,106 @@
+{
+    "258048636653535234": {
+        "wins": 7,
+        "ties": 7,
+        "losses": 4,
+        "rock": 2,
+        "paper": 2,
+        "scissors": 0
+    },
+    "475429436137668630": {
+        "wins": 6,
+        "ties": 9,
+        "losses": 10,
+        "rock": 2,
+        "paper": 3,
+        "scissors": 3
+    },
+    "720288689141579776": {
+        "wins": 1,
+        "ties": 3,
+        "losses": 3,
+        "rock": 1,
+        "paper": 0,
+        "scissors": 0
+    },
+    "524331117516554253": {
+        "wins": 3,
+        "ties": 3,
+        "losses": 5,
+        "rock": 0,
+        "paper": 0,
+        "scissors": 0
+    },
+    "401860842775379970": {
+        "wins": 6,
+        "ties": 6,
+        "losses": 2,
+        "rock": 1,
+        "paper": 2,
+        "scissors": 3
+    },
+    "597111214929346565": {
+        "wins": 0,
+        "ties": 1,
+        "losses": 0,
+        "rock": 0,
+        "paper": 0,
+        "scissors": 0
+    },
+    "532333660049899540": {
+        "wins": 1,
+        "ties": 0,
+        "losses": 0,
+        "rock": 0,
+        "paper": 0,
+        "scissors": 0
+    },
+    "508407967716999188": {
+        "wins": 5,
+        "ties": 3,
+        "losses": 4,
+        "rock": 2,
+        "paper": 5,
+        "scissors": 1
+    },
+    "723260991172771891": {
+        "wins": 0,
+        "ties": 1,
+        "losses": 0,
+        "rock": 0,
+        "paper": 0,
+        "scissors": 0
+    },
+    "733057678036828294": {
+        "wins": 0,
+        "ties": 1,
+        "losses": 2,
+        "rock": 0,
+        "paper": 0,
+        "scissors": 0
+    },
+    "662790645320122369": {
+        "wins": 5,
+        "ties": 0,
+        "losses": 2,
+        "rock": 0,
+        "paper": 0,
+        "scissors": 0
+    },
+    "766310295437049877": {
+        "wins": 1,
+        "ties": 0,
+        "losses": 2,
+        "rock": 0,
+        "paper": 0,
+        "scissors": 0
+    },
+    "335958694585958400": {
+        "wins": 0,
+        "ties": 0,
+        "losses": 1,
+        "rock": 0,
+        "paper": 0,
+        "scissors": 1
+    }
+}
