@@ -14,11 +14,12 @@ with open("bottoken.txt") as file:
 status = "you"
 #gaming
 
+
 @client.command(pass_context=True)
 async def help(ctx):
     async with ctx.typing():
         author = ctx.message.author
-        embed=discord.Embed(title="Bran's Commands:", description="**---------------------------------------------------------**", color=0x97f575)
+        embed=discord.Embed(title="Bran's Commands:", description=f"**{57*'-'}**", color=0x97f575)
 
         embed.add_field(name="help", value='dms u this message \n'
                                            '"man!help here" sends this where you typed it', inline=False)
@@ -55,9 +56,11 @@ async def changestatus():
     await client.wait_until_ready()
     global status
     while 1 == 1: #not client.is_closed():
-        await client.change_presence(activity=discord.Activity(type=discord.ActivityType.watching, name=f"over {status}."))
+        await client.change_presence(activity=discord.Activity(
+            type=discord.ActivityType.watching, name=f"over {status}."))
         await asyncio.sleep(5)
-        await client.change_presence(activity=discord.Activity(type=discord.ActivityType.listening, name=f"{status}."))
+        await client.change_presence(activity=discord.Activity(
+            type=discord.ActivityType.listening, name=f"{status}."))
         await asyncio.sleep(5)
         await client.change_presence(activity=discord.Game(name=f"with {status}."))
         await asyncio.sleep(5)
@@ -154,7 +157,8 @@ async def online(ctx):
         with open("registered_players.txt") as player_file:
             contents = player_file.read().split()
         embed=discord.Embed(title="Online Players:", description="(current lobby or game)", color=0x97f575)
-        embed.set_thumbnail(url="https://images-ext-2.discordapp.net/external/TFgA-LouGUg-cNDEn5waBZkt7kX7iGVzHy0Vjrfm5go/https/hypixel.net/attachments/hypixel-jpg.760131/")
+        embed.set_thumbnail(url="https://images-ext-2.discordapp.net/external/TFgA-LouGUg-"
+                                "cNDEn5waBZkt7kX7iGVzHy0Vjrfm5go/https/hypixel.net/attachments/hypixel-jpg.760131/")
 
         processes = []
         with ThreadPoolExecutor() as executor:
@@ -167,7 +171,8 @@ async def online(ctx):
                 break
         if anyoneonline==False:
             bedem=discord.Embed(title="Online Players:", description="no one online ;-;", color=0x97f575)
-            bedem.set_thumbnail(url="https://images-ext-2.discordapp.net/external/TFgA-LouGUg-cNDEn5waBZkt7kX7iGVzHy0Vjrfm5go/https/hypixel.net/attachments/hypixel-jpg.760131/")
+            bedem.set_thumbnail(url="https://images-ext-2.discordapp.net/external/TFgA-LouGUg-"
+                                    "cNDEn5waBZkt7kX7iGVzHy0Vjrfm5go/https/hypixel.net/attachments/hypixel-jpg.760131/")
             await ctx.send(embed=bedem)
         else:
             await ctx.send(embed=embed)
@@ -186,12 +191,14 @@ async def duel(ctx):
     if challenger == challenged:
         await ctx.send("You can't duel yourself!")
         return
-    message = await ctx.send(f"<@!{challenger.id}> has challenged <@!{challenged.id}> to a duel of Rock Paper Scissors!  \n They have 30 seconds to confirm!")
+    message = await ctx.send(f"<@!{challenger.id}> has challenged <@!{challenged.id}> "
+                             f"to a duel of Rock Paper Scissors!  \n They have 30 seconds to confirm!")
     challenge_emojis = ["✅", "🚫"]
     for emoji in challenge_emojis:
         await message.add_reaction(emoji)
     def check(payload):
-        return payload.message_id == message.id and str(payload.emoji) in challenge_emojis and payload.user_id == challenged.id
+        return payload.message_id == message.id and str(payload.emoji) in challenge_emojis \
+               and payload.user_id == challenged.id
     try:
         variable = await client.wait_for('raw_reaction_add', timeout=30.0, check=check)
         #print(variable.emoji)
@@ -250,7 +257,8 @@ async def on_raw_reaction_add(payload):
     winningcases = ["paperrock", "rockscissors", "scissorspaper"]
     for game in games:
         for message in game[1:]:
-            if message not in emojinames and payload.message_id == message.id and str(payload.emoji) in emojis and payload.user_id != 811435588942692352:
+            if message not in emojinames and payload.message_id == message.id and str(payload.emoji) in emojis \
+                    and payload.user_id != 811435588942692352:
                 for thing in range(len(game[1:])):
                     try:
                         if game[thing+1].id == payload.message_id:
@@ -261,21 +269,26 @@ async def on_raw_reaction_add(payload):
                     with open("rockpaperscissorstats.json") as in_file:
                         stats = json.load(in_file)
                     if str(game[0][1].id) not in stats:
-                        stats[str(game[0][1].id)] = {"wins": 0, "ties": 0, "losses": 0, "rock": 0, "paper": 0, "scissors": 0}
+                        stats[str(game[0][1].id)] = {"wins": 0, "ties": 0, "losses": 0,
+                                                     "rock": 0, "paper": 0, "scissors": 0}
                     if str(game[0][2].id) not in stats:
-                        stats[str(game[0][2].id)] = {"wins": 0, "ties": 0, "losses": 0, "rock": 0, "paper": 0, "scissors": 0}
+                        stats[str(game[0][2].id)] = {"wins": 0, "ties": 0, "losses": 0,
+                                                     "rock": 0, "paper": 0, "scissors": 0}
                     stats[str(game[0][1].id)][game[1]] += 1
                     stats[str(game[0][2].id)][game[2]] += 1
                     if game[1] == game[2]:
-                        who_won = f"<@!{game[0][1].id}> and <@!{game[0][2].id}> tied in their duel {emojis[emojinames.index(game[1])]}!"
+                        who_won = f"<@!{game[0][1].id}> and <@!{game[0][2].id}> tied " \
+                                  f"in their duel {emojis[emojinames.index(game[1])]}!"
                         stats[str(game[0][1].id)]["ties"] += 1
                         stats[str(game[0][2].id)]["ties"] += 1
                     elif game[1] + game[2] in winningcases:
-                        who_won = f"<@!{game[0][1].id}> {emojis[emojinames.index(game[1])]} won the duel against <@!{game[0][2].id}> {emojis[emojinames.index(game[2])]}!"
+                        who_won = f"<@!{game[0][1].id}> {emojis[emojinames.index(game[1])]} won the duel against " \
+                                  f"<@!{game[0][2].id}> {emojis[emojinames.index(game[2])]}!"
                         stats[str(game[0][1].id)]["wins"] += 1
                         stats[str(game[0][2].id)]["losses"] += 1
                     else:
-                        who_won = f"<@!{game[0][2].id}> {emojis[emojinames.index(game[2])]} won the duel against <@!{game[0][1].id}> {emojis[emojinames.index(game[1])]}!"
+                        who_won = f"<@!{game[0][2].id}> {emojis[emojinames.index(game[2])]} won the duel against " \
+                                  f"<@!{game[0][1].id}> {emojis[emojinames.index(game[1])]}!"
                         stats[str(game[0][1].id)]["losses"] += 1
                         stats[str(game[0][2].id)]["wins"] += 1
                     await game[0][0].send(who_won)
