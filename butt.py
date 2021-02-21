@@ -11,7 +11,8 @@ with open("hypixelkey.txt") as file:
     api_key = file.read()
 with open("bottoken.txt") as file:
     token = file.read()
-status = "you"
+with open("status.txt") as file:
+    status = file.read()[1:-1]
 #gaming
 
 
@@ -19,7 +20,7 @@ status = "you"
 async def help(ctx):
     async with ctx.typing():
         author = ctx.message.author
-        embed=discord.Embed(title="Bran's Commands:", description=f"**{57*'-'}**", color=0x97f575)
+        embed = discord.Embed(title="Bran's Commands:", description=f"**{57*'-'}**", color=0x97f575)
 
         embed.add_field(name="help", value='dms u this message \n'
                                            '"man!help here" sends this where you typed it', inline=False)
@@ -47,7 +48,8 @@ async def help(ctx):
 @client.event
 async def on_ready():
     global status
-    status = "you"
+    with open("status.txt") as file:
+        status = file.read()[1:-1]
     await client.change_presence(activity=discord.Activity(type=discord.ActivityType.watching, name=f"over {status}."))
     print("yes")
 
@@ -55,7 +57,7 @@ async def on_ready():
 async def changestatus():
     await client.wait_until_ready()
     global status
-    while 1 == 1: #not client.is_closed():
+    while not client.is_closed():
         await client.change_presence(activity=discord.Activity(
             type=discord.ActivityType.watching, name=f"over {status}."))
         await asyncio.sleep(5)
@@ -70,6 +72,8 @@ async def changestatus():
 async def status(ctx):
     global status
     status = str(ctx.message.content)[11:]
+    with open("status.txt", "w") as out_file:
+        json.dump(status, out_file)
     await ctx.send(f"status object changed to {status}")
 
 
@@ -300,9 +304,9 @@ async def on_raw_reaction_add(payload):
 async def duelstats(ctx):
     async with ctx.typing():
         if len(ctx.message.raw_mentions) == 0:
-            await ctx.send("Whose stats do you want?")
-            return
-        player = await client.fetch_user(ctx.message.raw_mentions[0])
+            player = ctx.message.author
+        else:
+            player = await client.fetch_user(ctx.message.raw_mentions[0])
         with open("rockpaperscissorstats.json") as in_file:
             stats = json.load(in_file)
         try:
