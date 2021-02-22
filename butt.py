@@ -5,7 +5,7 @@ from butter import *
 import asyncio
 import json
 #gaming+
-client = commands.Bot(command_prefix="man!")
+client = commands.Bot(command_prefix="b!")
 client.remove_command('help')
 with open("hypixelkey.txt") as file:
     api_key = file.read()
@@ -23,7 +23,7 @@ async def help(ctx):
         embed = discord.Embed(title="Bran's Commands:", description=f"**{57*'-'}**", color=0x97f575)
 
         embed.add_field(name="help", value='dms u this message \n'
-                                           '"man!help here" sends this where you typed it', inline=False)
+                                           '"b!help here" sends this where you typed it', inline=False)
         embed.add_field(name="helloworld", value="says hello to you", inline=False)
         embed.add_field(name="repeat", value="repeats your message", inline=False)
         embed.add_field(name="say", value="repeats and deletes your message", inline=False)
@@ -31,19 +31,20 @@ async def help(ctx):
         embed.add_field(name="namemc", value="the given ign's NameMc link", inline=False)
         embed.add_field(name="online", value="lists who is online on hypixel \n"
                                              "your ign must be registered to show up on the list\n"
-                                             "man!fl also works.", inline=False)
+                                             "b!fl also works.", inline=False)
         embed.add_field(name="duel", value="requests to duel the mentioned player in rps. \n"
                                            "don't mention a player to play with anyone. \n"
-                                           "man!rps also works.", inline=False)
+                                           "b!rps also works.", inline=False)
         embed.add_field(name="duelstats", value="obtains your stats from using the duel command. \n"
-                                                "man!stats also works.", inline=False)
+                                                "b!stats also works.", inline=False)
         embed.add_field(name="status", value="sets the object in the status of this bot \n"
                                              "please be careful with it", inline=False)
-        if str(ctx.message.content)[9:] == "here":
+        if str(ctx.message.content)[7:] == "here":
             await ctx.send(embed=embed)
         else:
             await ctx.send("dm sent :D")
             await author.send(embed=embed)
+
 
 @client.event
 async def on_ready():
@@ -60,18 +61,18 @@ async def changestatus():
     while not client.is_closed():
         await client.change_presence(activity=discord.Activity(
             type=discord.ActivityType.watching, name=f"over {status}."))
-        await asyncio.sleep(5)
+        await asyncio.sleep(3)
         await client.change_presence(activity=discord.Activity(
             type=discord.ActivityType.listening, name=f"{status}."))
-        await asyncio.sleep(5)
+        await asyncio.sleep(3)
         await client.change_presence(activity=discord.Game(name=f"with {status}."))
-        await asyncio.sleep(5)
+        await asyncio.sleep(3)
 
 
 @client.command(pass_context=True)
 async def status(ctx):
     global status
-    status = str(ctx.message.content)[11:]
+    status = str(ctx.message.content)[9:]
     with open("status.txt", "w") as out_file:
         json.dump(status, out_file)
     await ctx.send(f"status object changed to {status}")
@@ -87,16 +88,22 @@ async def helloworld(ctx):
 @client.command(pass_context=True)
 async def repeat(ctx):
     async with ctx.typing():
-        if len(str(ctx.message.content)) > 11:
-            message = discord.utils.escape_mentions(str(ctx.message.content)[10:])
+        if len(str(ctx.message.content)) > 9:
+            if ctx.message.mention_everyone:
+                message = discord.utils.escape_mentions(str(ctx.message.content)[8:])
+            else:
+                message = str(ctx.message.content)[5:]
             await ctx.send(message)
 
 
 @client.command(pass_context=True)
 async def say(ctx):
     async with ctx.typing():
-        if len(str(ctx.message.content)) > 8:
-            message = discord.utils.escape_mentions(str(ctx.message.content)[7:])
+        if len(str(ctx.message.content)) > 6:
+            if ctx.message.mention_everyone:
+                message = discord.utils.escape_mentions(str(ctx.message.content)[5:])
+            else:
+                message = str(ctx.message.content)[5:]
             await ctx.send(message)
         await ctx.message.delete()
 
