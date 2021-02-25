@@ -61,12 +61,12 @@ async def changestatus():
     while not client.is_closed():
         await client.change_presence(activity=discord.Activity(
             type=discord.ActivityType.watching, name=f"over {status}."))
-        await asyncio.sleep(3)
+        await asyncio.sleep(5)
         await client.change_presence(activity=discord.Activity(
             type=discord.ActivityType.listening, name=f"{status}."))
-        await asyncio.sleep(3)
+        await asyncio.sleep(5)
         await client.change_presence(activity=discord.Game(name=f"with {status}."))
-        await asyncio.sleep(3)
+        await asyncio.sleep(5)
 
 
 @client.command(pass_context=True)
@@ -76,6 +76,58 @@ async def status(ctx):
     with open("status.txt", "w") as out_file:
         json.dump(status, out_file)
     await ctx.send(f"status object changed to {status}")
+
+
+@client.command(pass_context=True)
+async def data(ctx):
+    msgdata = str(ctx.message.content)[7:].split(">")
+    if len(msgdata) >= 4:
+        await ctx.send("3 is the maximum number of layers")
+        return
+    perameter = msgdata[-1]
+    perameter = perameter[len(perameter.split()[0])+1:]
+    print(perameter)
+    msgdata[-1] = msgdata[-1][:-(1+len(perameter))]
+    print(msgdata)
+
+    with open("data.json") as in_file:
+        filedata = json.load(in_file)
+    if len(msgdata) == 3:
+        if msgdata[0] not in filedata:
+            filedata[msgdata[0]] = {msgdata[1]: {msgdata[2]: perameter}}
+        elif msgdata[1] not in filedata[msgdata[0]]:
+            filedata[msgdata[0]][msgdata[1]] = {msgdata[2]: perameter}
+        else:# msgdata[2] not in filedata[msgdata[0]][msgdata[1]]:
+            filedata[msgdata[0]][msgdata[1]][msgdata[2]] = perameter
+    elif len(msgdata) == 2:
+        if msgdata[0] not in filedata:
+            filedata[msgdata[0]] = {msgdata[1]: perameter}
+        elif msgdata[1] not in filedata[msgdata[0]]:
+            filedata[msgdata[0]][msgdata[1]] = perameter
+    elif len(msgdata) == 1:
+        filedata[msgdata[0]] = perameter
+    print(filedata)
+
+    with open("data.json", "w") as out_file:
+        json.dump(filedata, out_file, indent=4)
+    await ctx.send(f"data stored.")
+
+
+@client.command(pass_context=True)
+async def getdata(ctx):
+    msgdata = str(ctx.message.content)[10:].split(">")
+    if len(msgdata) >= 4:
+        await ctx.send("3 is the maximum number of layers")
+        return
+
+    with open("data.json") as in_file:
+        filedata = json.load(in_file)
+    if len(msgdata) == 3:
+        await ctx.send(str(filedata[msgdata[0]][msgdata[1]][msgdata[2]]).replace("{", "{\n    ").replace("}", "\n}    "))
+    elif len(msgdata) == 2:
+        await ctx.send(str(filedata[msgdata[0]][msgdata[1]]).replace("{", "{\n    ").replace("}", "\n}    "))
+    elif len(msgdata) == 1:
+        await ctx.send(str(filedata[msgdata[0]]).replace("{", "{\n    ").replace("}", "\n}    "))
 
 
 @client.command(pass_context=True)
@@ -92,7 +144,7 @@ async def repeat(ctx):
             if ctx.message.mention_everyone:
                 message = discord.utils.escape_mentions(str(ctx.message.content)[8:])
             else:
-                message = str(ctx.message.content)[5:]
+                message = str(ctx.message.content)[8:]
             await ctx.send(message)
 
 

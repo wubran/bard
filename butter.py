@@ -45,6 +45,6 @@ def do_embed(uuid, embed):
         else:
             timeonline = ""
             minutes = ""
-            seconds = f"{seconds}s"
+            seconds = f" {seconds}s"
         embed.add_field(name=":white_check_mark: "+playername, value=f"{recentgame},  \n     Online for{timeonline}{minutes}{seconds}.", inline=True)
         return True
