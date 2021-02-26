@@ -1,9 +1,11 @@
-from discord.ext import commands
+from discord.ext import commands, tasks
 import discord
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from butter import *
 import asyncio
 import json
+from time import *
+
 #gaming+
 client = commands.Bot(command_prefix="b!")
 client.remove_command('help')
@@ -39,6 +41,8 @@ async def help(ctx):
                                                 "b!stats also works.", inline=False)
         embed.add_field(name="status", value="sets the object in the status of this bot \n"
                                              "please be careful with it", inline=False)
+        embed.add_field(name="simp", value="be a simp for the mentioned user. \n"
+                                             "b!dream", inline=False)
         if str(ctx.message.content)[7:] == "here":
             await ctx.send(embed=embed)
         else:
@@ -49,9 +53,11 @@ async def help(ctx):
 @client.event
 async def on_ready():
     global status
+    global jeneral
     with open("status.txt") as file:
         status = file.read()[1:-1]
     await client.change_presence(activity=discord.Activity(type=discord.ActivityType.watching, name=f"over {status}."))
+    jeneral = await client.fetch_channel(806611882252566548)
     print("yes")
 
 
@@ -67,6 +73,13 @@ async def changestatus():
         await asyncio.sleep(5)
         await client.change_presence(activity=discord.Game(name=f"with {status}."))
         await asyncio.sleep(5)
+        with open("last_daily.txt") as file:
+            lastday = file.read()
+            nowday = localtime().tm_mday
+        if not int(lastday) == int(nowday):
+            with open("last_daily.txt", "w") as out_file:
+                json.dump(nowday, out_file)
+            await jeneral.send("gm :D")
 
 
 @client.command(pass_context=True)
@@ -78,17 +91,15 @@ async def status(ctx):
     await ctx.send(f"status object changed to {status}")
 
 
-@client.command(pass_context=True)
+@client.command(pass_context=True, aliases=["give", "push"])
 async def data(ctx):
     msgdata = str(ctx.message.content)[7:].split(">")
     if len(msgdata) >= 4:
         await ctx.send("3 is the maximum number of layers")
         return
     perameter = msgdata[-1]
-    perameter = perameter[len(perameter.split()[0])+1:]
-    print(perameter)
+    perameter = perameter[len(perameter.split(" ")[0])+1:]
     msgdata[-1] = msgdata[-1][:-(1+len(perameter))]
-    print(msgdata)
 
     with open("data.json") as in_file:
         filedata = json.load(in_file)
@@ -106,18 +117,20 @@ async def data(ctx):
             filedata[msgdata[0]][msgdata[1]] = perameter
     elif len(msgdata) == 1:
         filedata[msgdata[0]] = perameter
-    print(filedata)
 
     with open("data.json", "w") as out_file:
         json.dump(filedata, out_file, indent=4)
     await ctx.send(f"data stored.")
 
 
-@client.command(pass_context=True)
-async def getdata(ctx):
-    msgdata = str(ctx.message.content)[10:].split(">")
+@client.command(pass_context=True, aliases=["mem"])
+async def get(ctx):
+    msgdata = str(ctx.message.content)[6:].split(">")
     if len(msgdata) >= 4:
         await ctx.send("3 is the maximum number of layers")
+        return
+    elif msgdata[0] == "":
+        await ctx.send("provide a category (or two) and a name separated by >'s to pull from my memory.")
         return
 
     with open("data.json") as in_file:
@@ -128,6 +141,16 @@ async def getdata(ctx):
         await ctx.send(str(filedata[msgdata[0]][msgdata[1]]).replace("{", "{\n    ").replace("}", "\n}    "))
     elif len(msgdata) == 1:
         await ctx.send(str(filedata[msgdata[0]]).replace("{", "{\n    ").replace("}", "\n}    "))
+
+
+@client.command(pass_context=True, aliases=["dream"])
+async def simp(ctx):
+    async with ctx.typing():
+        dream = str(ctx.message.content)[7:].upper()
+        if len(dream) > 0:
+            await ctx.send(f"{dream}‼️{dream}‼️ Hello 😀👋🏻 do your shoes need shining? 🤔👟✨ \n"
+                           f"{dream}😳‼️{dream} please 🥺☹️🙏 Should you need coffee? 👀☕️ \n"
+                           f"Come back 😫 PLEASE my clout 😤🤑 Dont go away from me 🥺\n{dream} Please 😫😫🤨")
 
 
 @client.command(pass_context=True)
@@ -384,6 +407,13 @@ async def duelstats(ctx):
                       f"Papers: {stats['paper']} ({round(100*stats['paper']/statgames)}%)\n" \
                       f"Scissors: {stats['scissors']} ({round(100*stats['scissors']/statgames)}%)\n"
         await ctx.send(statmessage)
+
+'''
+@client.command(pass_context=True)
+async def when(ctx):
+    await ctx.send(localtime().tm_mday)
+'''
+
 
 
 client.loop.create_task(changestatus())
