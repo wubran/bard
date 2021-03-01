@@ -22,27 +22,34 @@ with open("status.txt") as file:
 async def help(ctx):
     async with ctx.typing():
         author = ctx.message.author
-        embed = discord.Embed(title="Bran's Commands:", description=f"**{57*'-'}**", color=0x97f575)
+        embed = discord.Embed(title="Bran's Commands:", description=f"**{94*'-'}**", color=0x97f575)
 
         embed.add_field(name="help", value='dms u this message \n'
-                                           '"b!help here" sends this where you typed it', inline=False)
-        embed.add_field(name="helloworld", value="says hello to you", inline=False)
-        embed.add_field(name="repeat", value="repeats your message", inline=False)
-        embed.add_field(name="say", value="repeats and deletes your message", inline=False)
-        embed.add_field(name="doubles", value="the BW doubles wins of the ign provided", inline=False)
-        embed.add_field(name="namemc", value="the given ign's NameMc link", inline=False)
+                                           '"b!help here" sends this where you typed it', inline=True)
+        embed.add_field(name="helloworld", value="says hello to you", inline=True)
         embed.add_field(name="online", value="lists who is online on hypixel \n"
                                              "your ign must be registered to show up on the list\n"
                                              "b!fl also works.", inline=False)
-        embed.add_field(name="duel", value="requests to duel the mentioned player in rps. \n"
-                                           "don't mention a player to play with anyone. \n"
-                                           "b!rps also works.", inline=False)
+        embed.add_field(name="repeat", value="repeats your message", inline=True)
+        embed.add_field(name="say", value="repeats and deletes your message", inline=True)
+        embed.add_field(name="namemc", value="the given ign's NameMc link", inline=False)
+        embed.add_field(name="duel", value="requests RPS with the mentioned player. \n"
+                                           "to play with anyone, dont list a player. \n"
+                                           "b!rps also works.", inline=True)
         embed.add_field(name="duelstats", value="obtains your stats from using the duel command. \n"
-                                                "b!stats also works.", inline=False)
-        embed.add_field(name="status", value="sets the object in the status of this bot \n"
-                                             "please be careful with it", inline=False)
+                                                "b!stats also works.", inline=True)
         embed.add_field(name="simp", value="be a simp for the mentioned user. \n"
-                                             "b!dream", inline=False)
+                                            "b!dream", inline=False)
+        embed.add_field(name="birth", value="log your birthday in the bot (mm/dd/yyyy). \n"
+                                            "wait for a surprise when it comes ;)", inline=True)
+        embed.add_field(name="birthdays", value="lists all registered birthdays in the bot. \n"
+                                                "register with b!birth", inline=True)
+        embed.add_field(name="status", value="sets the object in the status of this bot \n"
+                                             "~~please be careful with it~~", inline=False)
+        embed.add_field(name="data", value="store some data in the bot \n"
+                                           "b!data category>subcategory>name data", inline=True)
+        embed.add_field(name="get", value="be a simp for the mentioned user. \n"
+                                          "b!mem also works", inline=True)
         if str(ctx.message.content)[7:] == "here":
             await ctx.send(embed=embed)
         else:
@@ -61,7 +68,7 @@ async def on_ready():
     print("yes")
 
 
-async def changestatus():
+async def theloop():
     await client.wait_until_ready()
     global status
     while not client.is_closed():
@@ -89,6 +96,74 @@ async def status(ctx):
     with open("status.txt", "w") as out_file:
         json.dump(status, out_file)
     await ctx.send(f"status object changed to {status}")
+
+
+@client.command(pass_context=True)
+async def birthdays(ctx):
+    with open("birthdays.json") as in_file:
+        filedata = json.load(in_file)
+    embed = discord.Embed(title="Registered Birthdays:", description=f"**{94 * '-'}**", color=0x97f575)
+    for each in range(len(filedata["author"])):
+        if filedata["month"][each] == 12 or filedata["month"][each] <= 2:
+            emoji = "❄️"
+        elif filedata["month"][each] <= 5:
+            emoji = "🌱️"
+        elif filedata["month"][each] <= 8:
+            emoji = "☀️"
+        else:
+            emoji = "🍂"
+        embed.add_field(name=f"{emoji} {await client.fetch_user(filedata['author'][each])}",
+                        value=f'{filedata["month"][each]}/{filedata["day"][each]}/{filedata["year"][each]}', inline=True)
+
+    await ctx.send(embed=embed)
+
+@client.command(pass_context=True)
+async def birth(ctx):
+    msgdata = str(ctx.message.content)[8:]
+    validdays = {1: 31, 2: 28, 3: 31, 4: 30, 5: 31, 6: 30, 7: 31, 8: 31, 9: 30, 10: 31, 11: 30, 12: 31}
+    try:
+        author = await client.fetch_user(ctx.message.raw_mentions[0])
+    except IndexError:
+        author = ctx.author.id
+    try:
+        month = int(msgdata.split("/")[0])
+        day = int(msgdata.split("/")[1])
+        year = int(msgdata.split("/")[2])
+        if month > 12:
+            await ctx.send("this is not a valid month.")
+            return
+        if day > validdays[month] and not year % 4 == 0 and not month == 2 and not day == 29:
+            await ctx.send("this is not a valid day.")
+            return
+        if year < 1000:
+            await ctx.send("four digit year pls ;)")
+        if year < 2000:
+            await ctx.send("ok smol")
+            return
+    except IndexError:
+        await ctx.send("provide a valid birthday (mm/dd/yyyy)")
+        return
+    except ValueError:
+        await ctx.send("provide a valid birthday (mm/dd/yyyy)")
+        return
+
+    with open("birthdays.json") as in_file:
+        filedata = json.load(in_file)
+
+    if author not in filedata["author"]:
+        filedata["month"].append(month)
+        filedata["day"].append(day)
+        filedata["year"].append(year)
+        filedata["author"].append(author)
+    else:
+        ind = filedata["author"].index(author)
+        filedata["month"][ind] = month
+        filedata["day"][ind] = day
+        filedata["year"][ind] = year
+
+    with open("birthdays.json", "w") as out_file:
+        json.dump(filedata, out_file, indent=4)
+    await ctx.send("birthday saved :D")
 
 
 @client.command(pass_context=True, aliases=["give", "push"])
@@ -416,5 +491,5 @@ async def when(ctx):
 
 
 
-client.loop.create_task(changestatus())
+client.loop.create_task(theloop())
 client.run(token)
