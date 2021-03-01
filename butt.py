@@ -84,8 +84,25 @@ async def theloop():
             nowday = localtime().tm_mday
         if not int(lastday) == int(nowday):
             with open("last_daily.txt", "w") as out_file:
-                out_file.write(nowday)
-            await jeneral.send("gm :D")
+                out_file.write(str(nowday))
+            with open("birthdays.json") as in_file:
+                filedata = json.load(in_file)
+            if int(localtime().tm_mon) in filedata["month"] and int(localtime().tm_mday) in filedata["month"]:
+                await jeneral.send("gm :D")
+                for each in range(len(filedata["author"])):
+                    if filedata["month"][each] == int(localtime().tm_mon) and filedata["day"][each] == int(localtime().tm_mday):
+                        age = int(localtime().tm_year)-filedata["year"][each]
+                        ones = age%10
+                        if ones > 2 or ones == 0:
+                            age = str(age) + "th"
+                        elif ones == 2:
+                            age = str(age) + "nd"
+                        elif ones == 1:
+                            age = str(age) + "st"
+                        name = await client.fetch_user(filedata['author'][each])
+                        name = name.mention
+                        await jeneral.send(f"IT'S {name}'S "
+                                       f"{age} BIRTHDAYYY")
 
 
 @client.command(pass_context=True)
@@ -113,8 +130,8 @@ async def birthdays(ctx):
             emoji = "🍂"
         embed.add_field(name=f"{emoji} {await client.fetch_user(filedata['author'][each])}",
                         value=f'{filedata["month"][each]}/{filedata["day"][each]}/{filedata["year"][each]}', inline=True)
-
     await ctx.send(embed=embed)
+
 
 @client.command(pass_context=True)
 async def birth(ctx):
@@ -122,12 +139,13 @@ async def birth(ctx):
     validdays = {1: 31, 2: 28, 3: 31, 4: 30, 5: 31, 6: 30, 7: 31, 8: 31, 9: 30, 10: 31, 11: 30, 12: 31}
     try:
         author = await client.fetch_user(ctx.message.raw_mentions[0])
+        author = author.id
     except IndexError:
         author = ctx.author.id
     try:
         month = int(msgdata.split("/")[0])
         day = int(msgdata.split("/")[1])
-        year = int(msgdata.split("/")[2])
+        year = int(msgdata.split("/")[2].split()[0])
         if month > 12:
             await ctx.send("this is not a valid month.")
             return
@@ -136,6 +154,7 @@ async def birth(ctx):
             return
         if year < 1000:
             await ctx.send("four digit year pls ;)")
+            return
         if year < 2000:
             await ctx.send("ok smol")
             return
@@ -465,6 +484,25 @@ async def duelstats(ctx):
         await ctx.send(statmessage)
 
 
+'''@client.command(pass_context=True)
+async def isbirthday(ctx):
+    with open("birthdays.json") as in_file:
+        filedata = json.load(in_file)
+    if int(localtime().tm_mon) in filedata["month"] and int(localtime().tm_mday) in filedata["month"]:
+        for each in range(len(filedata["author"])):
+            if filedata["month"][each] == int(localtime().tm_mon) and filedata["day"][each] == int(localtime().tm_mday):
+                age = int(localtime().tm_year) - filedata["year"][each]
+                ones = age % 10
+                if ones > 2 or ones == 0:
+                    age = str(age) + "th"
+                elif ones == 2:
+                    age = str(age) + "nd"
+                elif ones == 1:
+                    age = str(age) + "st"
+                name = await client.fetch_user(filedata['author'][each])
+                name = name.mention
+                await ctx.send(f"IT'S {name}'S "
+                                   f"{age} BIRTHDAYYY")'''
 
 client.loop.create_task(theloop())
 client.run(token)
