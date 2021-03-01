@@ -54,8 +54,7 @@ async def help(ctx):
 async def on_ready():
     global status
     global jeneral
-    with open("status.txt") as file:
-        status = file.read()[1:-1]
+
     await client.change_presence(activity=discord.Activity(type=discord.ActivityType.watching, name=f"over {status}."))
     jeneral = await client.fetch_channel(806611882252566548)
     print("yes")
@@ -78,7 +77,7 @@ async def changestatus():
             nowday = localtime().tm_mday
         if not int(lastday) == int(nowday):
             with open("last_daily.txt", "w") as out_file:
-                json.dump(nowday, out_file)
+                out_file.write(nowday)
             await jeneral.send("gm :D")
 
 
@@ -87,7 +86,7 @@ async def status(ctx):
     global status
     status = str(ctx.message.content)[9:]
     with open("status.txt", "w") as out_file:
-        json.dump(status, out_file)
+        out_file.write(status)
     await ctx.send(f"status object changed to {status}")
 
 
@@ -108,7 +107,7 @@ async def data(ctx):
             filedata[msgdata[0]] = {msgdata[1]: {msgdata[2]: perameter}}
         elif msgdata[1] not in filedata[msgdata[0]]:
             filedata[msgdata[0]][msgdata[1]] = {msgdata[2]: perameter}
-        else:# msgdata[2] not in filedata[msgdata[0]][msgdata[1]]:
+        else:
             filedata[msgdata[0]][msgdata[1]][msgdata[2]] = perameter
     elif len(msgdata) == 2:
         if msgdata[0] not in filedata:
@@ -217,24 +216,6 @@ async def namemc(ctx):
             return
         await ctx.send(f"https://namemc.com/profile/{parameters[1]}")
     return
-
-
-'''
-@client.command(pass_context=True)
-async def recentgame(ctx):
-    parameters = ctx.message.content.split()
-    if len(parameters) <= 1:
-        await ctx.send("give ign :)")
-        return
-    player = parameters[1]
-    data = requests.get(f"https://api.hypixel.net/player?key={api_key}&name={player}").json()
-    if data["player"] is None:
-        await ctx.send("ign bad")
-        return
-    ign = data["player"]["displayname"]
-    recentgame = data["player"]["mostRecentGameType"]
-    await ctx.send(f"{ign}'s most recent game is {recentgame}")
-'''
 
 
 @client.command(pass_context=True, aliases=["fl"])
@@ -407,12 +388,6 @@ async def duelstats(ctx):
                       f"Papers: {stats['paper']} ({round(100*stats['paper']/statgames)}%)\n" \
                       f"Scissors: {stats['scissors']} ({round(100*stats['scissors']/statgames)}%)\n"
         await ctx.send(statmessage)
-
-'''
-@client.command(pass_context=True)
-async def when(ctx):
-    await ctx.send(localtime().tm_mday)
-'''
 
 
 
