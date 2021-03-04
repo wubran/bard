@@ -26,32 +26,32 @@ async def help(ctx):
 
         embed.add_field(name="help  :question:", value='dms u this message \n'
                                                        '"b!help here" sends this where you typed it', inline=True)
-        embed.add_field(name="helloworld  :wave:", value="says hello to you", inline=True)
+        embed.add_field(name="hello  :wave:", value="says hello to you\n"
+                                                    ";D hehe\nthe first command", inline=True)
         embed.add_field(name="simp  :pleading_face: :point_right: :point_left:",
                         value="be a simp for the mentioned user. \n"
                               "b!dream", inline=True)
 
-        embed.add_field(name="repeat  :loud_sound:", value="repeats your message", inline=True)
-        embed.add_field(name="say  :mute:", value="repeats and deletes your message", inline=True)
+        embed.add_field(name="repeat  :loud_sound:", value="repeats your message \n (same channel)", inline=True)
+        embed.add_field(name="say  :mute:", value="repeats and deletes your message (same channel)", inline=True)
         embed.add_field(name="jeneral  :loudspeaker:", value="repeats your message in jeneral", inline=True)
 
-        embed.add_field(name="online  :white_check_mark:", value="lists who is online on hypixel \n"
-                                                                 "your ign must be registered to show up on the list\n"
+        embed.add_field(name="online  :white_check_mark:", value="lists who (registered) is online on hypixel \n"
                                                                  "b!fl also works.", inline=True)
         embed.add_field(name="doubles  :crossed_swords:", value="states the total BW doubles wins \n"
                                                                 "of the ign provided\n", inline=True)
-        embed.add_field(name="namemc  :eyes:", value="the given ign's NameMc link", inline=True)
+        embed.add_field(name="namemc  :eyes:", value="sends the the given ign's NameMc link \n(same channel)", inline=True)
 
-        embed.add_field(name="duel  :moyai: :pencil:  :scissors:", value="requests RPS with the mentioned player. \n"
-                                                                         "to play with anyone, dont list a player. \n"
-                                                                         "b!rps also works.", inline=True)
+        embed.add_field(name="duel  :moyai: :pencil:  :scissors:", value="requests to RPS anyone. \n"
+                                                                         "you can also mention someone specific. \n"
+                                                                         , inline=True)
         embed.add_field(name="duelstats  :muscle:", value="obtains your stats from using the duel command. \n"
                                                           "b!stats also works.", inline=True)
         embed.add_field(name=":point_left: (description)", value="RPS stands for rock paper scissors. \n"
-                                                                 "Prepare for the bot to DM u.", inline=True)
+                                                                 "Prepare for the bot's DM'.", inline=True)
 
         embed.add_field(name="birth  :cake:", value="log your birthday in the bot (mm/dd/yyyy). \n"
-                                                    "wait for a surprise when it comes ;)", inline=True)
+                                                    "wait for a surprise ;)", inline=True)
         embed.add_field(name="birthdays  :tada:", value="lists all registered birthdays in the bot. \n"
                                                         "register with b!birth", inline=True)
         embed.add_field(name="nextbirth  :cupcake:", value="get the closest next birthday that is \n"
@@ -60,7 +60,7 @@ async def help(ctx):
         embed.add_field(name="status  :thumbsup:", value="sets the object in the status of this bot \n"
                                                          "~~please be careful with it~~", inline=True)
         embed.add_field(name="data  :pencil2:", value="store some data in the bot \n"
-                                                      "b!data category>subcategory>name data", inline=True)
+                                                      "b!data (categories>) (carrots seperating) data", inline=True)
         embed.add_field(name="get  :mag_right:", value="be a simp for the mentioned user. \n"
                                                        "b!mem also works", inline=True)
         if str(ctx.message.content)[7:] == "here":
@@ -290,7 +290,7 @@ async def simp(ctx):
 
 
 @client.command(pass_context=True)
-async def helloworld(ctx):
+async def hello(ctx):
     async with ctx.typing():
         await ctx.send("heyyy world ;)")
     return
