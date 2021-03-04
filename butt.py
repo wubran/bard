@@ -6,7 +6,7 @@ import asyncio
 import json
 from time import *
 
-#gaming+
+#gaming
 client = commands.Bot(command_prefix="b!")
 client.remove_command('help')
 with open("hypixelkey.txt") as file:
@@ -15,41 +15,54 @@ with open("bottoken.txt") as file:
     token = file.read()
 with open("status.txt") as file:
     status = file.read()[1:-1]
-#gaming
+#botsthots 806611882252566548
 
 
 @client.command(pass_context=True)
 async def help(ctx):
     async with ctx.typing():
         author = ctx.message.author
-        embed = discord.Embed(title="Bran's Commands:", description=f"**{94*'-'}**", color=0x97f575)
+        embed = discord.Embed(title="Bran's b! Commands: (bard #9171)", description=f"**{94*'-'}**", color=0x97f575)
 
-        embed.add_field(name="help", value='dms u this message \n'
-                                           '"b!help here" sends this where you typed it', inline=True)
-        embed.add_field(name="helloworld", value="says hello to you", inline=True)
-        embed.add_field(name="online", value="lists who is online on hypixel \n"
-                                             "your ign must be registered to show up on the list\n"
-                                             "b!fl also works.", inline=False)
-        embed.add_field(name="repeat", value="repeats your message", inline=True)
-        embed.add_field(name="say", value="repeats and deletes your message", inline=True)
-        embed.add_field(name="namemc", value="the given ign's NameMc link", inline=False)
-        embed.add_field(name="duel", value="requests RPS with the mentioned player. \n"
-                                           "to play with anyone, dont list a player. \n"
-                                           "b!rps also works.", inline=True)
-        embed.add_field(name="duelstats", value="obtains your stats from using the duel command. \n"
-                                                "b!stats also works.", inline=True)
-        embed.add_field(name="simp", value="be a simp for the mentioned user. \n"
-                                            "b!dream", inline=False)
-        embed.add_field(name="birth", value="log your birthday in the bot (mm/dd/yyyy). \n"
-                                            "wait for a surprise when it comes ;)", inline=True)
-        embed.add_field(name="birthdays", value="lists all registered birthdays in the bot. \n"
-                                                "register with b!birth", inline=True)
-        embed.add_field(name="status", value="sets the object in the status of this bot \n"
-                                             "~~please be careful with it~~", inline=False)
-        embed.add_field(name="data", value="store some data in the bot \n"
-                                           "b!data category>subcategory>name data", inline=True)
-        embed.add_field(name="get", value="be a simp for the mentioned user. \n"
-                                          "b!mem also works", inline=True)
+        embed.add_field(name="help  :question:", value='dms u this message \n'
+                                                       '"b!help here" sends this where you typed it', inline=True)
+        embed.add_field(name="helloworld  :wave:", value="says hello to you", inline=True)
+        embed.add_field(name="simp  :pleading_face: :point_right: :point_left:",
+                        value="be a simp for the mentioned user. \n"
+                              "b!dream", inline=True)
+
+        embed.add_field(name="repeat  :loud_sound:", value="repeats your message", inline=True)
+        embed.add_field(name="say  :mute:", value="repeats and deletes your message", inline=True)
+        embed.add_field(name="jeneral  :loudspeaker:", value="repeats your message in jeneral", inline=True)
+
+        embed.add_field(name="online  :white_check_mark:", value="lists who is online on hypixel \n"
+                                                                 "your ign must be registered to show up on the list\n"
+                                                                 "b!fl also works.", inline=True)
+        embed.add_field(name="doubles  :crossed_swords:", value="states the total BW doubles wins \n"
+                                                                "of the ign provided\n", inline=True)
+        embed.add_field(name="namemc  :eyes:", value="the given ign's NameMc link", inline=True)
+
+        embed.add_field(name="duel  :moyai: :pencil:  :scissors:", value="requests RPS with the mentioned player. \n"
+                                                                         "to play with anyone, dont list a player. \n"
+                                                                         "b!rps also works.", inline=True)
+        embed.add_field(name="duelstats  :muscle:", value="obtains your stats from using the duel command. \n"
+                                                          "b!stats also works.", inline=True)
+        embed.add_field(name=":point_left: (description)", value="RPS stands for rock paper scissors. \n"
+                                                                 "Prepare for the bot to DM u.", inline=True)
+
+        embed.add_field(name="birth  :cake:", value="log your birthday in the bot (mm/dd/yyyy). \n"
+                                                    "wait for a surprise when it comes ;)", inline=True)
+        embed.add_field(name="birthdays  :tada:", value="lists all registered birthdays in the bot. \n"
+                                                        "register with b!birth", inline=True)
+        embed.add_field(name="nextbirth  :cupcake:", value="get the closest next birthday that is \n"
+                                                           "registered in the bot.", inline=True)
+
+        embed.add_field(name="status  :thumbsup:", value="sets the object in the status of this bot \n"
+                                                         "~~please be careful with it~~", inline=True)
+        embed.add_field(name="data  :pencil2:", value="store some data in the bot \n"
+                                                      "b!data category>subcategory>name data", inline=True)
+        embed.add_field(name="get  :mag_right:", value="be a simp for the mentioned user. \n"
+                                                       "b!mem also works", inline=True)
         if str(ctx.message.content)[7:] == "here":
             await ctx.send(embed=embed)
         else:
@@ -61,9 +74,10 @@ async def help(ctx):
 async def on_ready():
     global status
     global jeneral
-
+    with open("status.txt") as file:
+        status = file.read()
     await client.change_presence(activity=discord.Activity(type=discord.ActivityType.watching, name=f"over {status}."))
-    jeneral = await client.fetch_channel(806611882252566548)
+    jeneral = await client.fetch_channel(748241629747347559)
     print("yes")
 
 
@@ -184,6 +198,35 @@ async def birth(ctx):
     await ctx.send("birthday saved :D")
 
 
+@client.command(pass_context=True)
+async def nextbirth(ctx): # assumes no twins
+    with open("birthdays.json") as in_file:
+        filedata = json.load(in_file)
+    validdays = {1: 31, 2: 28, 3: 31, 4: 30, 5: 31, 6: 30, 7: 31, 8: 31, 9: 30, 10: 31, 11: 30, 12: 31}
+    daysaway = []
+    today = int(localtime().tm_yday)
+    for entry in range(len(filedata["month"])):
+        yeardate = 0
+        for month in range(filedata["month"][entry]):
+            if not month == 0:
+                yeardate = yeardate + validdays[month]
+        daysaway.append(yeardate + filedata["day"][entry] - today)
+    beforesort = []
+    for number in daysaway:
+        beforesort.append(number)
+    daysaway.sort()
+    for boop in daysaway:
+        if boop >= 0:
+            ind = beforesort.index(boop)
+            age = int(localtime().tm_year) - filedata["year"][ind]
+            name = await client.fetch_user(filedata['author'][ind])
+            name = str(name)[:-5]
+            await ctx.send(f'The next registered birthday is:\n{name} (turning {age}) on '
+                           f'{filedata["month"][ind]}/{filedata["day"][ind]}/{filedata["year"][ind]}')
+            break
+
+
+
 @client.command(pass_context=True, aliases=["give", "push"])
 async def data(ctx):
     msgdata = str(ctx.message.content)[7:].split(">")
@@ -274,6 +317,17 @@ async def say(ctx):
                 message = str(ctx.message.content)[5:]
             await ctx.send(message)
         await ctx.message.delete()
+
+
+@client.command(pass_context=True)
+async def jeneral(ctx):
+    async with ctx.typing():
+        if len(str(ctx.message.content)) > 9:
+            if ctx.message.mention_everyone:
+                message = discord.utils.escape_mentions(str(ctx.message.content)[8:])
+            else:
+                message = str(ctx.message.content)[8:]
+            await jeneral.send(message)
 
 
 @client.command(pass_context=True)
