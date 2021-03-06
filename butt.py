@@ -595,6 +595,8 @@ async def c4game(payload, game):
                          rowid = -1
                     await game[7][rowid+1].edit(content=thegame.formatrow(game[8]+3*(rowid+1)))
                     game[6] = False
+                    if thegame.checkforwin(game[1], game[2], 1+game[3]):
+                        print("PLAYER WON")
                     if game[3]:
                         game[3] = 0
                     else:
@@ -604,7 +606,7 @@ async def c4game(payload, game):
                 await message.remove_reaction(payload.emoji, await client.fetch_user(payload.user_id))
         else:
             await game[7][game[9].index(payload.message_id)].clear_reactions()
-# game_messages = [[ctx, p1, p2, "c4", message, infomessage], x, y, turn, thegame, tops, new, rowids, rows]
+    # game_messages = [[ctx, p1, p2, "c4", message, infomessage], x, y, turn, thegame, tops, new, rowids, rows]
 
 
 @client.command(pass_context=True, aliases=["rpsstats", "stats"])
