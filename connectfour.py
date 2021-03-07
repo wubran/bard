@@ -13,6 +13,7 @@ class ConnectGame:
         self.new = False
         self.messages = [[], [], [], []]
         self.won = False
+        self.issmall = False
         # [[rowchannelid], [rowids], [reactorchannelid reactorid], [infochannelid, infoid]]
 
 
@@ -22,19 +23,23 @@ class ConnectGame:
     def formatrow(self, rowsleft):
         message = str(self.array)[2:-2]
         message = message.replace(" ", "").replace(",", "").split("][")
-        print(message)
+        #print(message)
         if rowsleft >= 3:
             upperrow = rowsleft-1
             lowerrow = upperrow-2
         else:
             upperrow = rowsleft-1
             lowerrow = 0
-        themessage = ""
+        themessage = " "
         for bruh in range(upperrow-lowerrow+1):
-            themessage = message[lowerrow+bruh]+themessage
+            if self.issmall:
+                themessage = "| "+message[lowerrow+bruh]+"|"+themessage
+            else:
+                themessage = message[lowerrow+bruh]+themessage
             if not bruh == upperrow-lowerrow:
                 themessage = "\n" + themessage
         themessage = themessage.replace("0", "🔳 ").replace("1", "🔴 ").replace("2", "🔵 ").replace("3", "❔ ")
+
         return themessage
 
     def checkforwin(self):
@@ -43,8 +48,13 @@ class ConnectGame:
         for direction in directions:
             try:
                 for distance in range(3):
-                    if self.array[self.y+(distance+1)*direction[1]][self.x+(distance+1)*direction[0]] == self.turn+1:
-                        distances[round(directions.index(direction)/2-.1)] += 1
+                    newy = self.y+(distance+1)*direction[1]
+                    newx = self.x+(distance+1)*direction[0]
+                    if newx >= 0 and newy >= 0:
+                        if self.array[newy][newx] == self.turn+1:
+                            distances[round(directions.index(direction)/2-.1)] += 1
+                        else:
+                            break
                     else:
                         break
             except IndexError:
@@ -57,4 +67,4 @@ class ConnectGame:
         return False
 
     def jsonify(self):
-        return [self.rows, self.columns, self.players, self.x, self.y, self.turn, self.tops, self.leftovers, self.new, self.messages, self.array, self.won]
+        return [self.rows, self.columns, self.players, self.x, self.y, self.turn, self.tops, self.leftovers, self.new, self.messages, self.array, self.won, self.issmall]

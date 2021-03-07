@@ -17,9 +17,12 @@ with open("bottoken.txt") as file:
     token = file.read()
 with open("status.txt") as file:
     status = file.read()[1:-1]
+with open("c4games.json") as in_file:
+    c4games = json.load(in_file)
 #botsthots 806611882252566548
 games = [] #contains the game message objects
-
+usercache = {}
+messagecache = {}
 
 @client.command(pass_context=True)
 async def help(ctx):
@@ -77,6 +80,8 @@ async def help(ctx):
 async def on_ready():
     global status
     global jeneral
+    global usercache
+    usercache = {"811435588942692352": await client.fetch_user(811435588942692352)}
     with open("status.txt") as file:
         status = file.read()
     await client.change_presence(activity=discord.Activity(type=discord.ActivityType.watching, name=f"over {status}."))
@@ -116,7 +121,7 @@ async def theloop():
                             age = str(age) + "nd"
                         elif ones == 1:
                             age = str(age) + "st"
-                        name = await client.fetch_user(filedata['author'][each])
+                        name = await fetchu(filedata['author'][each])
                         name = name.mention
                         await jeneral.send(f"IT'S {name}'S "
                                        f"{age} BIRTHDAYYY")
@@ -145,7 +150,7 @@ async def birthdays(ctx):
             emoji = "☀️"
         else:
             emoji = "🍂"
-        embed.add_field(name=f"{emoji} {await client.fetch_user(filedata['author'][each])}",
+        embed.add_field(name=f"{emoji} {await fetchu(filedata['author'][each])}",
                         value=f'{filedata["month"][each]}/{filedata["day"][each]}/{filedata["year"][each]}', inline=True)
     await ctx.send(embed=embed)
 
@@ -155,7 +160,7 @@ async def birth(ctx):
     msgdata = str(ctx.message.content)[8:]
     validdays = {1: 31, 2: 28, 3: 31, 4: 30, 5: 31, 6: 30, 7: 31, 8: 31, 9: 30, 10: 31, 11: 30, 12: 31}
     try:
-        author = await client.fetch_user(ctx.message.raw_mentions[0])
+        author = await fetchu(ctx.message.raw_mentions[0])
         author = author.id
     except IndexError:
         author = ctx.author.id
@@ -222,7 +227,7 @@ async def nextbirth(ctx): # assumes no twins
         if boop >= 0:
             ind = beforesort.index(boop)
             age = int(localtime().tm_year) - filedata["year"][ind]
-            name = await client.fetch_user(filedata['author'][ind])
+            name = await fetchu(filedata['author'][ind])
             name = str(name)[:-5]
             await ctx.send(f'The next registered birthday is:\n{name} (turning {age}) on '
                            f'{filedata["month"][ind]}/{filedata["day"][ind]}/{filedata["year"][ind]}')
@@ -414,9 +419,20 @@ async def rps(ctx):
             await message.add_reaction(emoji)
 
 
-@client.command(pass_context=True, aliases=["c4"])
-async def connect4(ctx):
+@client.command(pass_context=True)
+async def C4(ctx):
+    await connect4(ctx, False)
+
+
+@client.command(pass_context=True)
+async def c4(ctx):
+    await connect4(ctx, True)
+
+
+async def connect4(ctx, issmall):
     output = await alterc4inputs(ctx)
+    if output == None:
+        return
     rows = output[0]
     columns = output[1]
     note = output[2]
@@ -432,9 +448,8 @@ async def connect4(ctx):
     player1 = str(p1)[:-5]
     player2 = str(p2)[:-5]
 
-    with open("c4games.json") as in_file:
-        c4games = json.load(in_file)
     c4game = ConnectGame(rows, columns, p1.id, p2.id)  # THE GAME IS CREATED HEREEEEEEEEEEE
+    c4game.issmall = issmall
 
     await ctx.send(f"{note}The game has begun! P1: {player1} 🔴, P2: {player2} 🔵")
     rowsleft = rows
@@ -465,11 +480,10 @@ async def on_raw_reaction_add(payload):
     if not payload.user_id == 811435588942692352:
         for game in games:
             await rpsgame(payload, game)
-        with open("c4games.json") as in_file:
-            c4games = json.load(in_file)
+
         for c4game in range(len(c4games)):
             c4 = rehydrate(c4games[-c4game])
-            await fourconnect(payload, c4, -c4game)
+            await fourconnect(payload, c4, -c4game, c4games)
 
 
 async def rpsgame(payload, game):
@@ -516,21 +530,22 @@ async def rpsgame(payload, game):
                     json.dump(stats, out_file, indent=4)
 
 
-async def fourconnect(payload, c4, index):
+async def fourconnect(payload, c4, index, c4games):
     c4emojis = ["1️⃣", "2️⃣", "3️⃣", "4️⃣", "5️⃣", "6️⃣", "7️⃣", "8️⃣", "9️⃣"]  # ✅
 # c4.messages = [[channelid], [rowids], [reactorid], [infomessageid]]
-    '''if client.is_ws_ratelimited():
-        print("lag!")'''
+#    if client.is_ws_ratelimited():
+#        print("lag!")
     chid = c4.messages[0]
     k = await fetchm(chid, c4.messages[3])
     if payload.message_id in c4.messages[1]:
         if payload.message_id == c4.messages[2]:
             if payload.user_id == c4.players[c4.turn]:
                 if str(payload.emoji) in c4emojis:
-                    await k.edit(content=f"{await client.fetch_user(payload.user_id)} selected {payload.emoji}. Check to confirm.")
+                    await k.edit(content=f"{await fetchu(payload.user_id)} selected {payload.emoji}. Check to confirm.")
                     orowid = round((c4.y - c4.leftovers) / 3 - .4)
                     if orowid < 0:
                         orowid = -1
+                    print(c4.y, c4.x, c4.array[c4.y][c4.x])
                     if c4.array[c4.y][c4.x] == 3:
                         c4.array[c4.y][c4.x] = 0
                     c4.x = c4emojis.index(str(payload.emoji))
@@ -546,13 +561,13 @@ async def fourconnect(payload, c4, index):
                             await j.edit(content=c4.formatrow(c4.leftovers + 3 * (orowid + 1)))
                         j = await fetchm(chid, c4.messages[1][rowid+1])
                         await j.edit(content=c4.formatrow(c4.leftovers+3*(rowid+1)))
-                        with open("c4games.json") as in_file:
-                            c4games = json.load(in_file)
+
                         c4games[index] = (c4.jsonify())
-                        with open("c4games.json", "w") as out_file:
-                            json.dump(c4games, out_file, indent=4)
+
+#                        with open("c4games.json", "w") as out_file:
+#                            json.dump(c4games, out_file, indent=4)
                     else:
-                        await k.edit(content=f"Invalid move; {str(await client.fetch_user(c4.players[c4.turn]))} must select again. (too high)")
+                        await k.edit(content=f"Invalid move; {str(await fetchu(c4.players[c4.turn]))} must select again. (too high)")
                         c4.new = False
                 elif str(payload.emoji) == "✅" and c4.new:
                     print("confirm")
@@ -565,9 +580,8 @@ async def fourconnect(payload, c4, index):
                     await j.edit(content=c4.formatrow(c4.leftovers+3*(rowid+1)))
                     c4.new = False
                     if c4.checkforwin():
-                        await k.edit(content=f"GAME OVER. {str(await client.fetch_user(c4.players[c4.turn]))} won!!!")
-                        with open("c4games.json") as in_file:
-                            c4games = json.load(in_file)
+                        await k.edit(content=f"GAME OVER. {str(await fetchu(c4.players[c4.turn]))} won!!!")
+
                         del c4games[index]
                         with open("c4games.json", "w") as out_file:
                             json.dump(c4games, out_file, indent=4)
@@ -576,18 +590,17 @@ async def fourconnect(payload, c4, index):
                         c4.turn = 0
                     else:
                         c4.turn = 1
-                    await k.edit(content=f"It is now {str(await client.fetch_user(c4.players[c4.turn]))}'s turn")
-                    with open("c4games.json") as in_file:
-                        c4games = json.load(in_file)
+                    await k.edit(content=f"It is now {str(await fetchu(c4.players[c4.turn]))}'s turn")
+
                     c4games[index] = c4.jsonify()
                     with open("c4games.json", "w") as out_file:
                         json.dump(c4games, out_file, indent=4)
             if not payload.user_id == 811435588942692352:
                 h = await fetchm(chid, c4.messages[2])
-                await h.remove_reaction(payload.emoji, await client.fetch_user(payload.user_id))
+                await h.remove_reaction(payload.emoji, await fetchu(payload.user_id))
         else:
             i = await fetchm(chid, payload.message_id)
-            await i.remove_reaction(payload.emoji, await client.fetch_user(payload.user_id))
+            await i.remove_reaction(payload.emoji, await fetchu(payload.user_id))
     # game_messages = [[ctx, p1, p2, "c4", message, infomessage], x, y, turn, thegame, tops, new, rowids, rows]
 
 
@@ -597,7 +610,7 @@ async def duelstats(ctx):
         if len(ctx.message.raw_mentions) == 0:
             player = ctx.message.author
         else:
-            player = await client.fetch_user(ctx.message.raw_mentions[0])
+            player = await fetchu(ctx.message.raw_mentions[0])
         with open("rockpaperscissorstats.json") as in_file:
             stats = json.load(in_file)
         try:
@@ -624,7 +637,7 @@ async def duelstart(ctx, game):
     if len(parameters) <= 1:
         return await duelnoplayer(ctx, challenger, game)
     try:
-        challenged = await client.fetch_user(ctx.message.raw_mentions[0])
+        challenged = await fetchu(ctx.message.raw_mentions[0])
     except IndexError:
         return await duelnoplayer(ctx, challenger, game)
     if challenger == challenged:
@@ -657,7 +670,7 @@ async def duelstart(ctx, game):
 
 
 async def duelnoplayer(ctx, challenger, game):
-    message = await ctx.send(f"<@!{challenger.id}> is looking for a duel in {game}! \n"
+    message = await ctx.send(f"<@!{challenger.id}> is looking for a duel in **{game}**! \n"
                              f"There are 30 seconds left for someone to respond!")
     await message.add_reaction("✅")
     global accepted
@@ -669,7 +682,7 @@ async def duelnoplayer(ctx, challenger, game):
 
     try:
         await client.wait_for('raw_reaction_add', timeout=30.0, check=check)
-        accepted = await client.fetch_user(accepted)
+        accepted = await fetchu(accepted)
         #await ctx.send(f"<@!{accepted.id}> accepted the challenge! ✅")
     except asyncio.TimeoutError:
         await ctx.send(f"Uh Oh! Nobody responded in time!")
@@ -736,9 +749,27 @@ async def alterc4inputs(ctx):
 
 
 async def fetchm(channelid, messageid):
-    thechannel = await client.fetch_channel(channelid)
-    themessage = await thechannel.fetch_message(messageid)
+    if str(messageid) in messagecache.keys():
+        print("old message")
+        return messagecache[str(messageid)]
+    else:
+        thechannel = await client.fetch_channel(channelid)
+        themessage = await thechannel.fetch_message(messageid)
+        messagecache[str(messageid)] = themessage
+        print(f"new message: {messageid}")
     return themessage
+
+
+async def fetchu(userid):
+    print(f"userid is {userid}. usercache contains {usercache}")
+    if str(userid) in usercache.keys():
+        print("old user")
+        return usercache[str(userid)]
+    else:
+        theuser = await client.fetch_user(userid)
+        usercache[str(userid)] = theuser
+        print(f"new user: {userid}")
+    return theuser
 
 
 def rehydrate(c4game):
@@ -752,6 +783,7 @@ def rehydrate(c4game):
     c4.messages = c4game[9]
     c4.array = c4game[10]
     c4.won = c4game[11]
+    c4.issmall = c4game[12]
 # [self.rows, self.columns, self.players, self.x, self.y, self.turn, self.tops, self.leftovers, self.new, self.messages, self.array]
     return c4
 
