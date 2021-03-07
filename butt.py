@@ -1,4 +1,4 @@
-from discord.ext import commands, tasks
+from discord.ext import commands
 import discord
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from butter import *
@@ -416,108 +416,60 @@ async def rps(ctx):
 
 @client.command(pass_context=True, aliases=["c4"])
 async def connect4(ctx):
-    note = ""
-    splitted = ctx.message.content.split()
-    if len(splitted) > 1:
-        ignorelol = splitted[1]
-    else:
-        ignorelol = ""
-    if len(splitted) == 4:
-        columns = splitted[2]
-        rows = splitted[3]
-    elif len(splitted) <= 2:
-        columns = 7
-        rows = 6
-    elif len(splitted) > 4:
-        await ctx.send("...what\nb!c4 <mention someone (or leave empty)> <length> <height>")
-        return
-    elif len(splitted) == 3:
-        columns = splitted[2]
-        rows = 6
-    else:
-        await ctx.send("...what\nb!c4 <mention someone (or leave empty)> <length> <height>")
-        return
-
-    print(f"ignore: {ignorelol}")
-    if str(columns).isdigit() and str(rows).isdigit():
-        columns = int(columns)
-        rows = int(rows)
-    else:
-        await ctx.send("...what\nb!c4 <mention someone (or leave empty)> <length> <height>")
-        return
-    try:
-        ignorelol = int(ignorelol)
-        print("wrongtype")
-        if len(splitted) == 3 and type(columns) is int:
-            rows = columns
-            columns = ignorelol
-        elif len(splitted) == 2:
-            columns = ignorelol
-    except ValueError:
-        pass
-
-    else:
-        ignorelol = ""
-    if columns < 4:
-        columns = 4
-        note = "4 is the minimum number of rows/columns\n"
-    elif columns > 9:
-        columns = 9
-        note = "9 is the maximum number of columns\n"
-    if rows < 4:
-        rows = 4
-        note = "4 is the minimum number of rows/columns\n"
-    elif rows > 30:
-        rows = 30
-        note = "30 is the maximum number of rows\n"
-    print(f"columns: {columns}, rows: {rows}")
+    output = await alterc4inputs(ctx)
+    rows = output[0]
+    columns = output[1]
+    note = output[2]
     result = await duelstart(ctx, f"Connect 4 ({columns}x{rows})")
     if result == 0:
         return
     if random.randint(0, 1) == 0:
         p1 = result[0]
         p2 = result[1]
-        turn = 0
     else:
         p1 = result[1]
         p2 = result[0]
-        turn = 0
     player1 = str(p1)[:-5]
     player2 = str(p2)[:-5]
-    thegame = ConnectGame(columns, rows)
+
+    with open("c4games.json") as in_file:
+        c4games = json.load(in_file)
+    c4game = ConnectGame(rows, columns, p1.id, p2.id)  # THE GAME IS CREATED HEREEEEEEEEEEE
+
     await ctx.send(f"{note}The game has begun! P1: {player1} 🔴, P2: {player2} 🔵")
-    rowids = []
     rowsleft = rows
-    realrowids = []
     while rowsleft > 0:
-        message = await ctx.send(thegame.formatrow(rowsleft))
-        rowids.append(message)
-        realrowids.append(message.id)
+        tempmessage = await ctx.send(c4game.formatrow(rowsleft))
+        c4game.messages[1].append(tempmessage.id)
         if 3 >= rowsleft >= 1:
-            leftovers = rowsleft
+            c4game.leftovers = rowsleft
         rowsleft -= 3
-        #sleep(0.2)
-    infomessage = await ctx.send(f"{player1} goes first!")
-    rowids.reverse()
-    realrowids.reverse()
+    c4game.messages[2] = tempmessage.id
+    c4game.messages[0] = tempmessage.channel.id
+    c4game.messages[3] = await ctx.send(f"{player1} goes first!")
+    c4game.messages[3] = c4game.messages[3].id
+    c4game.messages[1].reverse()
+    # [[rowchannelid], [rowids], [reactorid], [infoid]]
+
     emojis = ["✅", "1️⃣", "2️⃣", "3️⃣", "4️⃣", "5️⃣", "6️⃣", "7️⃣", "8️⃣", "9️⃣"]
     for emoji in range(columns+1):
-        await message.add_reaction(emojis[emoji])
-    tops = [0]*columns
-    x = 0
-    y = 0
-    new = False
-    game_messages = [[ctx, p1, p2, "c4", message, infomessage], x, y, turn, thegame, tops, new, rowids, leftovers, realrowids]
-    games.append(game_messages)
+        await tempmessage.add_reaction(emojis[emoji])
+
+    c4games.append(c4game.jsonify())
+    with open("c4games.json", "w") as out_file:
+        json.dump(c4games, out_file, indent=4)
 
 
 @client.event
 async def on_raw_reaction_add(payload):
-    for game in games:
-        if game[0][3] == "rps":
+    if not payload.user_id == 811435588942692352:
+        for game in games:
             await rpsgame(payload, game)
-        elif game[0][3] == "c4":
-            await c4game(payload, game)
+        with open("c4games.json") as in_file:
+            c4games = json.load(in_file)
+        for c4game in range(len(c4games)):
+            c4 = rehydrate(c4games[-c4game])
+            await fourconnect(payload, c4, -c4game)
 
 
 async def rpsgame(payload, game):
@@ -564,48 +516,78 @@ async def rpsgame(payload, game):
                     json.dump(stats, out_file, indent=4)
 
 
-async def c4game(payload, game):
-    c4emojis = ["1️⃣", "2️⃣", "3️⃣", "4️⃣", "5️⃣", "6️⃣", "7️⃣", "8️⃣", "9️⃣"]  #✅
-    message = game[0][4]
-    thegame = game[4]
+async def fourconnect(payload, c4, index):
+    c4emojis = ["1️⃣", "2️⃣", "3️⃣", "4️⃣", "5️⃣", "6️⃣", "7️⃣", "8️⃣", "9️⃣"]  # ✅
+# c4.messages = [[channelid], [rowids], [reactorid], [infomessageid]]
     '''if client.is_ws_ratelimited():
         print("lag!")'''
-    if payload.message_id in game[9]:
-        if payload.message_id == message.id:
-            if payload.user_id == game[0][1 + game[3]].id:
+    chid = c4.messages[0]
+    k = await fetchm(chid, c4.messages[3])
+    if payload.message_id in c4.messages[1]:
+        if payload.message_id == c4.messages[2]:
+            if payload.user_id == c4.players[c4.turn]:
                 if str(payload.emoji) in c4emojis:
-                    await game[0][5].edit(content=f"{await client.fetch_user(payload.user_id)} selected {payload.emoji}. Check to confirm.")
-                    if thegame.array[game[2]][game[1]] == 3:
-                        thegame.array[game[2]][game[1]] = 0
-                    game[1] = c4emojis.index(str(payload.emoji))
-                    game[2] = game[5][game[1]]
-                    game[6] = True
-
-                    thegame.array[game[2]][game[1]] = 3
-                    rowid = round((game[2] - game[8]) / 3 - .4)
-                    if rowid < 0:
-                         rowid = -1
-                    await game[7][rowid+1].edit(content=thegame.formatrow(game[8]+3*(rowid+1)))
-
-                elif str(payload.emoji) == "✅" and game[6]:
-                    thegame.array[game[2]][game[1]] = 1+game[3]
-                    game[5][game[1]] = game[2]+1
-                    rowid = round((game[2] - game[8]) / 3 - .4)
-                    if rowid < 0:
-                         rowid = -1
-                    await game[7][rowid+1].edit(content=thegame.formatrow(game[8]+3*(rowid+1)))
-                    game[6] = False
-                    if thegame.checkforwin(game[1], game[2], 1+game[3]):
-                        print("PLAYER WON")
-                    if game[3]:
-                        game[3] = 0
+                    await k.edit(content=f"{await client.fetch_user(payload.user_id)} selected {payload.emoji}. Check to confirm.")
+                    orowid = round((c4.y - c4.leftovers) / 3 - .4)
+                    if orowid < 0:
+                        orowid = -1
+                    if c4.array[c4.y][c4.x] == 3:
+                        c4.array[c4.y][c4.x] = 0
+                    c4.x = c4emojis.index(str(payload.emoji))
+                    c4.y = c4.tops[c4.x]
+                    if not c4.y == c4.rows:
+                        c4.new = True
+                        c4.array[c4.y][c4.x] = 3
+                        rowid = round((c4.y - c4.leftovers) / 3 - .4)
+                        if rowid < 0:
+                             rowid = -1
+                        if not orowid == rowid:
+                            j = await fetchm(chid, c4.messages[1][orowid + 1])
+                            await j.edit(content=c4.formatrow(c4.leftovers + 3 * (orowid + 1)))
+                        j = await fetchm(chid, c4.messages[1][rowid+1])
+                        await j.edit(content=c4.formatrow(c4.leftovers+3*(rowid+1)))
+                        with open("c4games.json") as in_file:
+                            c4games = json.load(in_file)
+                        c4games[index] = (c4.jsonify())
+                        with open("c4games.json", "w") as out_file:
+                            json.dump(c4games, out_file, indent=4)
                     else:
-                        game[3] = 1
-                    await game[0][5].edit(content=f"It is now {str(game[0][1 + game[3]])}'s turn")
+                        await k.edit(content=f"Invalid move; {str(await client.fetch_user(c4.players[c4.turn]))} must select again. (too high)")
+                        c4.new = False
+                elif str(payload.emoji) == "✅" and c4.new:
+                    print("confirm")
+                    c4.array[c4.y][c4.x] = 1+c4.turn
+                    c4.tops[c4.x] = c4.y+1
+                    rowid = round((c4.y - c4.leftovers) / 3 - .4)
+                    if rowid < 0:
+                         rowid = -1
+                    j = await fetchm(chid, c4.messages[1][rowid+1])
+                    await j.edit(content=c4.formatrow(c4.leftovers+3*(rowid+1)))
+                    c4.new = False
+                    if c4.checkforwin():
+                        await k.edit(content=f"GAME OVER. {str(await client.fetch_user(c4.players[c4.turn]))} won!!!")
+                        with open("c4games.json") as in_file:
+                            c4games = json.load(in_file)
+                        del c4games[index]
+                        with open("c4games.json", "w") as out_file:
+                            json.dump(c4games, out_file, indent=4)
+                        return
+                    if c4.turn:
+                        c4.turn = 0
+                    else:
+                        c4.turn = 1
+                    await k.edit(content=f"It is now {str(await client.fetch_user(c4.players[c4.turn]))}'s turn")
+                    with open("c4games.json") as in_file:
+                        c4games = json.load(in_file)
+                    c4games[index] = c4.jsonify()
+                    with open("c4games.json", "w") as out_file:
+                        json.dump(c4games, out_file, indent=4)
             if not payload.user_id == 811435588942692352:
-                await message.remove_reaction(payload.emoji, await client.fetch_user(payload.user_id))
+                h = await fetchm(chid, c4.messages[2])
+                await h.remove_reaction(payload.emoji, await client.fetch_user(payload.user_id))
         else:
-            await game[7][game[9].index(payload.message_id)].clear_reactions()
+            i = await fetchm(chid, payload.message_id)
+            await i.remove_reaction(payload.emoji, await client.fetch_user(payload.user_id))
     # game_messages = [[ctx, p1, p2, "c4", message, infomessage], x, y, turn, thegame, tops, new, rowids, rows]
 
 
@@ -693,6 +675,85 @@ async def duelnoplayer(ctx, challenger, game):
         await ctx.send(f"Uh Oh! Nobody responded in time!")
         return 0
     return [challenger, accepted]
+
+
+async def alterc4inputs(ctx):
+    note = ""
+    splitted = ctx.message.content.split()
+    if len(splitted) > 1:
+        ignorelol = splitted[1]
+    else:
+        ignorelol = ""
+    if len(splitted) == 4:
+        columns = splitted[2]
+        rows = splitted[3]
+    elif len(splitted) <= 2:
+        columns = 7
+        rows = 6
+    elif len(splitted) > 4:
+        await ctx.send("...what\nb!c4 <mention someone (or leave empty)> <length> <height>")
+        return
+    elif len(splitted) == 3:
+        columns = splitted[2]
+        rows = 6
+    else:
+        await ctx.send("...what\nb!c4 <mention someone (or leave empty)> <length> <height>")
+        return
+
+    if str(columns).isdigit() and str(rows).isdigit():
+        columns = int(columns)
+        rows = int(rows)
+    else:
+        await ctx.send("...what\nb!c4 <mention someone (or leave empty)> <length> <height>")
+        return
+    try:
+        ignorelol = int(ignorelol)
+        print("wrongtype")
+        if len(splitted) == 3 and type(columns) is int:
+            rows = columns
+            columns = ignorelol
+        elif len(splitted) == 2:
+            columns = ignorelol
+    except ValueError:
+        pass
+
+    else:
+        ignorelol = ""
+    if columns < 4:
+        columns = 4
+        note = "4 is the minimum number of rows/columns\n"
+    elif columns > 9:
+        columns = 9
+        note = "9 is the maximum number of columns\n"
+    if rows < 4:
+        rows = 4
+        note = "4 is the minimum number of rows/columns\n"
+    elif rows > 30:
+        rows = 30
+        note = "30 is the maximum number of rows\n"
+    print(f"columns: {columns}, rows: {rows}")
+    return [rows, columns, note]
+
+
+async def fetchm(channelid, messageid):
+    thechannel = await client.fetch_channel(channelid)
+    themessage = await thechannel.fetch_message(messageid)
+    return themessage
+
+
+def rehydrate(c4game):
+    c4 = ConnectGame(c4game[0], c4game[1], c4game[2][0], c4game[2][1])
+    c4.x = c4game[3]
+    c4.y = c4game[4]
+    c4.turn = c4game[5]
+    c4.tops = c4game[6]
+    c4.leftovers = c4game[7]
+    c4.new = c4game[8]
+    c4.messages = c4game[9]
+    c4.array = c4game[10]
+    c4.won = c4game[11]
+# [self.rows, self.columns, self.players, self.x, self.y, self.turn, self.tops, self.leftovers, self.new, self.messages, self.array]
+    return c4
 
 
 client.loop.create_task(theloop())
